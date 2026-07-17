@@ -22,10 +22,11 @@ class AuthService
 
     public function login(LoginRequest $request): array
     {
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (! Auth::attempt($request->only('email', 'password'))) {
             throw new AuthenticationException('Invalid credentials');
         }
 
+        /** @var User $user */
         $user = Auth::user();
         $user->tokens()->delete();
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -35,12 +36,12 @@ class AuthService
 
     public function logout(User $user): void
     {
-        $currentToken = $user->currentAccessToken();
+        $token = $user->currentAccessToken();
 
-        if ($currentToken instanceof TransientToken) {
+        if ($token instanceof TransientToken) {
             return;
         }
 
-        $currentToken->delete();
+        $token->delete();
     }
 }

@@ -1,29 +1,29 @@
 <?php
 
-use App\Models\User;
 use App\Enums\UserRole;
+use App\Models\User;
 
 it('can register a new vendor', function () {
     $response = $this->postJson('/api/v1/register', [
-        'name'     => 'Youssef Amrani',
-        'email'    => 'youssef@example.com',
+        'name' => 'Youssef Amrani',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $response->assertStatus(201)
-             ->assertJsonStructure(['user', 'token'])
-             ->assertJsonPath('user.role', 'vendor');
+        ->assertJsonStructure(['user', 'token'])
+        ->assertJsonPath('user.role', 'vendor');
 });
 
 it('cannot register with duplicate email', function () {
     User::factory()->create(['email' => 'youssef@example.com']);
 
     $response = $this->postJson('/api/v1/register', [
-        'name'     => 'Youssef Amrani',
-        'email'    => 'youssef@example.com',
+        'name' => 'Youssef Amrani',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $response->assertStatus(422);
@@ -31,10 +31,10 @@ it('cannot register with duplicate email', function () {
 
 it('cannot register with invalid role', function () {
     $response = $this->postJson('/api/v1/register', [
-        'name'     => 'Youssef Amrani',
-        'email'    => 'youssef@example.com',
+        'name' => 'Youssef Amrani',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
-        'role'     => 'superadmin',
+        'role' => 'superadmin',
     ]);
 
     $response->assertStatus(422);
@@ -42,28 +42,28 @@ it('cannot register with invalid role', function () {
 
 it('can login with valid credentials', function () {
     User::factory()->create([
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => bcrypt('Password123'),
-        'role'     => UserRole::VENDOR,
+        'role' => UserRole::VENDOR,
     ]);
 
     $response = $this->postJson('/api/v1/login', [
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
     ]);
 
     $response->assertStatus(200)
-             ->assertJsonStructure(['user', 'token']);
+        ->assertJsonStructure(['user', 'token']);
 });
 
 it('cannot login with wrong password', function () {
     User::factory()->create([
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => bcrypt('Password123'),
     ]);
 
     $response = $this->postJson('/api/v1/login', [
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => 'WrongPassword',
     ]);
 
@@ -76,7 +76,7 @@ it('can get authenticated user', function () {
     $response = $this->actingAs($user)->getJson('/api/v1/me');
 
     $response->assertStatus(200)
-             ->assertJsonPath('role', 'buyer');
+        ->assertJsonPath('role', 'buyer');
 });
 
 it('can logout', function () {
@@ -85,5 +85,5 @@ it('can logout', function () {
     $response = $this->actingAs($user)->postJson('/api/v1/logout');
 
     $response->assertStatus(200)
-             ->assertJsonPath('message', 'Logged out successfully');
+        ->assertJsonPath('message', 'Logged out successfully');
 });

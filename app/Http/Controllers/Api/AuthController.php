@@ -19,7 +19,7 @@ class AuthController extends Controller
         $result = $this->authService->register($request);
 
         return response()->json([
-            'user'  => new UserResource($result['user']),
+            'user' => new UserResource($result['user']),
             'token' => $result['token'],
         ], 201);
     }
@@ -29,7 +29,7 @@ class AuthController extends Controller
         $result = $this->authService->login($request);
 
         return response()->json([
-            'user'  => new UserResource($result['user']),
+            'user' => new UserResource($result['user']),
             'token' => $result['token'],
         ]);
     }

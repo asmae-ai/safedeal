@@ -37,9 +37,20 @@ class User extends Authenticatable
         ];
     }
 
-    public function isVendor(): bool { return $this->role === UserRole::VENDOR; }
-    public function isBuyer(): bool  { return $this->role === UserRole::BUYER; }
-    public function isAdmin(): bool  { return $this->role === UserRole::ADMIN; }
+    public function isVendor(): bool
+    {
+        return $this->role === UserRole::VENDOR;
+    }
+
+    public function isBuyer(): bool
+    {
+        return $this->role === UserRole::BUYER;
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::ADMIN;
+    }
 
     public function isIdentityVerified(): bool
     {
