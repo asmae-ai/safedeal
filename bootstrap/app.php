@@ -1,8 +1,16 @@
 <?php
 
+use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\SecurityHeaders;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,8 +20,42 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->api(prepend: [
+            ForceJsonResponse::class,
+            SecurityHeaders::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+
+        $exceptions->render(function (Throwable $e, Request $request): ?JsonResponse {
+            if (! ($request->expectsJson() || $request->is('api/*'))) {
+                return null;
+            }
+
+            if ($e instanceof ValidationException) {
+                return response()->json([
+                    'message' => 'The given data was invalid.',
+                    'errors'  => $e->errors(),
+                ], 422);
+            }
+
+            if ($e instanceof AuthenticationException) {
+                return response()->json([
+                    'message' => $e->getMessage() ?: 'Unauthenticated.',
+                ], 401);
+            }
+
+            if ($e instanceof HttpException) {
+                return response()->json([
+                    'message' => $e->getMessage() ?: 'HTTP error.',
+                ], $e->getStatusCode());
+            }
+
+            $message = app()->environment('production')
+                ? 'Server error. Please try again later.'
+                : $e->getMessage();
+
+            return response()->json(['message' => $message], 500);
+        });
+
     })->create();
