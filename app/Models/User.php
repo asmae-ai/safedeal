@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Domain\Auth\Contracts\OtpRecipient;
 use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements OtpRecipient
 {
     use HasFactory, Notifiable, HasApiTokens;
 
@@ -35,6 +36,16 @@ class User extends Authenticatable
             'role'              => UserRole::class,
             'reputation_score'  => 'decimal:2',
         ];
+    }
+
+    public function id(): int
+    {
+        return (int) $this->attributes['id'];
+    }
+
+    public function email(): string
+    {
+        return (string) $this->attributes['email'];
     }
 
     public function isVendor(): bool
