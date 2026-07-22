@@ -7,7 +7,7 @@ use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable implements OtpRecipient
 {
@@ -67,4 +67,18 @@ class User extends Authenticatable implements OtpRecipient
     {
         return $this->identity_status === 'approved';
     }
+    public function getOtpIdentifier(): string
+{
+    return (string) $this->attributes['id'];
+}
+
+public function getOtpEmail(): string
+{
+    return (string) $this->attributes['email'];
+}
+
+public function getOtpName(): string
+{
+    return (string) $this->attributes['name'];
+}
 }

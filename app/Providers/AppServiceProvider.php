@@ -18,6 +18,8 @@ use App\Policies\IdentityVerificationPolicy;
 use App\Policies\TransactionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Infrastructure\Auth\DatabasePasswordResetTokenRepository;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OtpNotifier::class, EmailOtpNotifier::class);
         $this->app->bind(OtpGenerator::class, NumericOtpGenerator::class);
         $this->app->singleton(TwoFactorService::class);
+        $this->app->singleton(DatabasePasswordResetTokenRepository::class);
     }
 
     public function boot(): void

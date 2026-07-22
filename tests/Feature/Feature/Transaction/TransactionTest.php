@@ -33,7 +33,7 @@ describe('POST /api/v1/transactions', function () {
     it('vendor approuvé peut créer une transaction', function () {
         $vendor = makeApprovedVendor();
 
-        $response = $this->actingAs($vendor)->postJson('/api/v1/transactions', [
+        $response = $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
             'title'  => 'iPhone 14 Pro',
             'amount' => 1200.00,
         ]);
@@ -48,12 +48,12 @@ describe('POST /api/v1/transactions', function () {
     it('génère un secure_token unique', function () {
         $vendor = makeApprovedVendor();
 
-        $this->actingAs($vendor)->postJson('/api/v1/transactions', [
+        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
             'title'  => 'Transaction 1',
             'amount' => 500,
         ]);
 
-        $this->actingAs($vendor)->postJson('/api/v1/transactions', [
+        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
             'title'  => 'Transaction 2',
             'amount' => 800,
         ]);
@@ -68,7 +68,7 @@ describe('POST /api/v1/transactions', function () {
             'identity_status' => 'pending',
         ]);
 
-        $this->actingAs($vendor)->postJson('/api/v1/transactions', [
+        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
             'title'  => 'iPhone 14',
             'amount' => 1200,
         ])->assertStatus(403);
@@ -77,7 +77,7 @@ describe('POST /api/v1/transactions', function () {
     it('buyer ne peut pas créer une transaction', function () {
         $buyer = makeBuyer();
 
-        $this->actingAs($buyer)->postJson('/api/v1/transactions', [
+        $this->actingAs($buyer, 'api')->postJson('/api/v1/transactions', [
             'title'  => 'iPhone 14',
             'amount' => 1200,
         ])->assertStatus(403);
@@ -93,7 +93,7 @@ describe('POST /api/v1/transactions', function () {
     it('valide le titre obligatoire', function () {
         $vendor = makeApprovedVendor();
 
-        $this->actingAs($vendor)->postJson('/api/v1/transactions', [
+        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
             'amount' => 1200,
         ])->assertStatus(422)->assertJsonValidationErrors(['title']);
     });
@@ -101,7 +101,7 @@ describe('POST /api/v1/transactions', function () {
     it('valide le montant minimum', function () {
         $vendor = makeApprovedVendor();
 
-        $this->actingAs($vendor)->postJson('/api/v1/transactions', [
+        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
             'title'  => 'iPhone 14',
             'amount' => 0,
         ])->assertStatus(422)->assertJsonValidationErrors(['amount']);
@@ -110,7 +110,7 @@ describe('POST /api/v1/transactions', function () {
     it('valide la devise', function () {
         $vendor = makeApprovedVendor();
 
-        $this->actingAs($vendor)->postJson('/api/v1/transactions', [
+        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
             'title'    => 'iPhone 14',
             'amount'   => 1200,
             'currency' => 'GBP',
@@ -145,7 +145,7 @@ describe('GET /api/v1/transactions', function () {
         makeTransaction(['vendor_id' => $vendor->id]);
         makeTransaction(['vendor_id' => $vendor->id]);
 
-        $this->actingAs($vendor)->getJson('/api/v1/transactions')
+        $this->actingAs($vendor, 'api')->getJson('/api/v1/transactions')
             ->assertStatus(200)
             ->assertJsonCount(2, 'data');
     });
@@ -155,7 +155,7 @@ describe('GET /api/v1/transactions', function () {
         $vendor2 = makeApprovedVendor();
         makeTransaction(['vendor_id' => $vendor2->id]);
 
-        $this->actingAs($vendor1)->getJson('/api/v1/transactions')
+        $this->actingAs($vendor1, 'api')->getJson('/api/v1/transactions')
             ->assertStatus(200)
             ->assertJsonCount(0, 'data');
     });
@@ -176,7 +176,7 @@ describe('PATCH /api/v1/transactions/{id}/cancel', function () {
             'status'    => TransactionStatus::PendingPayment,
         ]);
 
-        $this->actingAs($vendor)
+        $this->actingAs($vendor, 'api')
             ->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
             ->assertStatus(200)
             ->assertJsonPath('data.status', 'cancelled');
@@ -189,7 +189,7 @@ describe('PATCH /api/v1/transactions/{id}/cancel', function () {
             'status'    => TransactionStatus::PaymentReceived,
         ]);
 
-        $this->actingAs($vendor)
+        $this->actingAs($vendor, 'api')
             ->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
             ->assertStatus(403);
     });
@@ -199,7 +199,7 @@ describe('PATCH /api/v1/transactions/{id}/cancel', function () {
         $vendor2     = makeApprovedVendor();
         $transaction = makeTransaction(['vendor_id' => $vendor1->id]);
 
-        $this->actingAs($vendor2)
+        $this->actingAs($vendor2, 'api')
             ->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
             ->assertStatus(403);
     });

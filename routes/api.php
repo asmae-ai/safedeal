@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\IdentityVerificationController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
+use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -16,11 +18,17 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/register', [AuthController::class, 'register']);
     });
 
+    // Password Reset — public
+    Route::prefix('auth/password')->group(function (): void {
+        Route::post('/forgot', [PasswordResetController::class, 'forgot']);
+        Route::post('/reset',  [PasswordResetController::class, 'reset']);
+    });
+
     // Public — accessible sans auth via lien sécurisé
     Route::get('/transactions/{token}', [TransactionController::class, 'show']);
 
     // Protected routes
-    Route::middleware('auth:sanctum')->group(function (): void {
+    Route::middleware('auth:api')->group(function (): void {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
 
@@ -32,6 +40,12 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/transactions', [TransactionController::class, 'store']);
         Route::get('/transactions', [TransactionController::class, 'index']);
         Route::patch('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel']);
+
+        // 2FA
+        Route::prefix('auth/2fa')->group(function (): void {
+            Route::post('/send',   [TwoFactorController::class, 'send']);
+            Route::post('/verify', [TwoFactorController::class, 'verify']);
+        });
     });
 
 });
