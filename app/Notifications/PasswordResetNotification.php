@@ -19,6 +19,11 @@ final class PasswordResetNotification extends Notification
         return ['mail'];
     }
 
+    public function getToken(): string
+{
+    return $this->token;
+}
+
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage())

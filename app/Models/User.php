@@ -67,18 +67,5 @@ class User extends Authenticatable implements OtpRecipient
     {
         return $this->identity_status === 'approved';
     }
-    public function getOtpIdentifier(): string
-{
-    return (string) $this->attributes['id'];
-}
-
-public function getOtpEmail(): string
-{
-    return (string) $this->attributes['email'];
-}
-
-public function getOtpName(): string
-{
-    return (string) $this->attributes['name'];
-}
+   
 }

@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class ForgotPasswordRequest extends FormRequest
+final class ForgotPasswordRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,14 +16,7 @@ class ForgotPasswordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'exists:users,email'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'email.exists' => 'Aucun compte associé à cet email.',
+            'email' => ['required', 'email:rfc'],
         ];
     }
 }

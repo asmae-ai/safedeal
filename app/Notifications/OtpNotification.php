@@ -24,4 +24,8 @@ final class OtpNotification extends Notification
             ->line("Ce code expire dans 10 minutes.")
             ->line("Si vous n'avez pas demandé ce code, ignorez cet email.");
     }
+    public function getOtp(): string
+{
+    return $this->otp;
+}
 }

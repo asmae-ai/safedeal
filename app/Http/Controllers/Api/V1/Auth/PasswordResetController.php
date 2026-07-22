@@ -32,13 +32,12 @@ final class PasswordResetController extends Controller
             $this->tokenRepository->store($token);
             $user->notify(new PasswordResetNotification($token->getValue()));
 
-            $this->auditLogger->log(new SecurityEvent(
-                type:    'password_reset_requested',
-                payload: ['user_id' => $user->id],
+            $this->auditLogger->record(SecurityEvent::info(
+                'password_reset_requested',
+                ['user_id' => $user->id],
             ));
         }
 
-        // Réponse identique pour éviter l'énumération d'emails
         return response()->json([
             'message' => 'If this email exists, a reset link has been sent.',
         ]);
@@ -49,9 +48,9 @@ final class PasswordResetController extends Controller
         $data = $request->validated();
 
         if (! $this->tokenRepository->isValid($data['email'], $data['token'])) {
-            $this->auditLogger->log(new SecurityEvent(
-                type:    'password_reset_token_invalid',
-                payload: ['email' => $data['email']],
+            $this->auditLogger->record(SecurityEvent::warn(
+                'password_reset_token_invalid',
+                ['email' => $data['email']],
             ));
 
             return response()->json(['message' => 'Invalid or expired reset token.'], 422);
@@ -59,13 +58,13 @@ final class PasswordResetController extends Controller
 
         $user = User::where('email', $data['email'])->firstOrFail();
         $user->update(['password' => Hash::make($data['password'])]);
-        $user->tokens()->delete(); // Révoquer tous les tokens Passport
+        $user->tokens()->each(fn ($token) => $token->revoke());
 
         $this->tokenRepository->delete($data['email']);
 
-        $this->auditLogger->log(new SecurityEvent(
-            type:    'password_reset_success',
-            payload: ['user_id' => $user->id],
+        $this->auditLogger->record(SecurityEvent::info(
+            'password_reset_success',
+            ['user_id' => $user->id],
         ));
 
         return response()->json(['message' => 'Password reset successfully.']);
