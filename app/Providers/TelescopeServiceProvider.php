@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Gate;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
-
+use App\Domain\Auth\Contracts\EmailVerificationStore;
+use App\Infrastructure\Auth\RedisEmailVerificationStore;
 class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
     /**
@@ -18,7 +19,7 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
         // Telescope::night();
 
         $this->hideSensitiveRequestDetails();
-
+        $this->app->bind(EmailVerificationStore::class, RedisEmailVerificationStore::class);
         $isLocal = $this->app->environment('local');
 
         Telescope::filter(function (IncomingEntry $entry) use ($isLocal) {

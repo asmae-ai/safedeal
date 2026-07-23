@@ -19,7 +19,8 @@ use App\Policies\TransactionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use App\Infrastructure\Auth\DatabasePasswordResetTokenRepository;
-
+use App\Domain\Auth\Contracts\EmailVerificationStore;
+use App\Infrastructure\Auth\RedisEmailVerificationStore;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,7 +40,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OtpGenerator::class, NumericOtpGenerator::class);
         $this->app->singleton(TwoFactorService::class);
         $this->app->singleton(DatabasePasswordResetTokenRepository::class);
+        $this->app->bind(EmailVerificationStore::class, RedisEmailVerificationStore::class);
     }
+
 
     public function boot(): void
     {

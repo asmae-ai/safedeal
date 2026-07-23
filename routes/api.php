@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
 Route::prefix('v1')->group(function (): void {
 
     // Public routes
@@ -46,6 +46,10 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/send',   [TwoFactorController::class, 'send']);
             Route::post('/verify', [TwoFactorController::class, 'verify']);
         });
+        Route::middleware('auth:api')->prefix('auth/email')->group(function () {
+    Route::post('verify', [EmailVerificationController::class, 'verify']);
+    Route::post('resend', [EmailVerificationController::class, 'resend']);
+});
     });
 
 });
