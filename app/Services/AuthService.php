@@ -30,17 +30,17 @@ class AuthService
 
     public function login(LoginRequest $request): array
     {
-        // 1. Vérifier les credentials
-        if (! Auth::attempt($request->only('email', 'password'))) {
+        // 1. Vérifier les credentials via le guard web (compatible Passport)
+        if (! Auth::guard('web')->attempt($request->only('email', 'password'))) {
             throw new AuthenticationException('Invalid credentials');
         }
 
         /** @var User $user */
-        $user = Auth::user();
+        $user = Auth::guard('web')->user();
 
-        // 2. Email non vérifié → 403 propre (pas un 500)
+        // 2. Email non vérifié → 403 propre
         if (! $user->hasVerifiedEmail()) {
-            Auth::logout();
+            Auth::guard('web')->logout();
             throw new HttpResponseException(
                 response()->json([
                     'message'        => 'Your email address is not verified.',
@@ -53,7 +53,7 @@ class AuthService
         // 3. Révoquer tous les anciens tokens (sécurité)
         $user->tokens()->each(fn ($token) => $token->revoke());
 
-        // 4. Générer un nouveau token
+        // 4. Générer un nouveau token Passport
         $token = $user->createToken('auth_token')->accessToken;
 
         return compact('user', 'token');
@@ -61,7 +61,6 @@ class AuthService
 
     public function logout(User $user): void
     {
-        // Révoquer tous les tokens actifs
         $user->tokens()->each(fn ($token) => $token->revoke());
     }
 }

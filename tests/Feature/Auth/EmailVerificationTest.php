@@ -50,10 +50,10 @@ it('unverified user cannot login', function () {
     $this->postJson('/api/v1/login', [
         'email'    => 'test@example.com',
         'password' => 'Password123',
-    ])->assertStatus(401)
-      ->assertJsonPath('message', 'Please verify your email before logging in.');
-});
 
+    ])->assertStatus(403)
+  ->assertJsonPath('message', 'Your email address is not verified.');
+    });
 it('user can verify email with valid code', function () {
     Notification::fake();
 

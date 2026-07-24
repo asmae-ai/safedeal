@@ -8,6 +8,7 @@ class SubmitVerificationRequest extends FormRequest
 {
     public function authorize(): bool
     {
+        // return $this->user()->can('submit-verification');
         return true;
     }
 

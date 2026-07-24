@@ -21,6 +21,7 @@ class User extends Authenticatable implements OtpRecipient
         'phone',
         'identity_status',
         'reputation_score',
+        'email_verified_at',
     ];
 
     protected $hidden = [
