@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\IdentityVerification\SubmitVerificationRequest;
-use App\Http\Resources\IdentityVerificationResource;
 use App\Services\IdentityVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,30 +33,30 @@ class IdentityVerificationController extends Controller
         $verification = $this->verificationService->submit($request, $user);
 
         return response()->json([
-            'message'             => 'Verification request submitted successfully',
+            'message' => 'Verification request submitted successfully',
             'verification_status' => $verification->status,
         ], 201);
     }
 
     public function status(Request $request): JsonResponse
     {
-        $user         = $request->user();
+        $user = $request->user();
         $verification = $this->verificationService->getStatus($user);
 
         if (! $verification) {
             return response()->json([
                 'verification_status' => 'not_submitted',
-                'submitted_at'        => null,
-                'reviewed_at'         => null,
-                'rejection_reason'    => null,
+                'submitted_at' => null,
+                'reviewed_at' => null,
+                'rejection_reason' => null,
             ]);
         }
 
         return response()->json([
             'verification_status' => $verification->status,
-            'submitted_at'        => $verification->created_at?->toISOString(),
-            'reviewed_at'         => $verification->reviewed_at?->toISOString(),
-            'rejection_reason'    => $verification->rejection_reason,
+            'submitted_at' => $verification->created_at?->toISOString(),
+            'reviewed_at' => $verification->reviewed_at?->toISOString(),
+            'rejection_reason' => $verification->rejection_reason,
         ]);
     }
 }

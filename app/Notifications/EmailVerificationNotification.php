@@ -21,7 +21,7 @@ final class EmailVerificationNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage())
+        return (new MailMessage)
             ->subject('SafeDeal — Vérifiez votre email')
             ->greeting("Bonjour {$notifiable->name},")
             ->line('Votre code de vérification SafeDeal :')

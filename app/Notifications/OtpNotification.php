@@ -21,11 +21,12 @@ final class OtpNotification extends Notification
         return (new MailMessage)
             ->subject('Votre code de vérification SafeDeal')
             ->line("Votre code de vérification est : **{$this->otp}**")
-            ->line("Ce code expire dans 10 minutes.")
+            ->line('Ce code expire dans 10 minutes.')
             ->line("Si vous n'avez pas demandé ce code, ignorez cet email.");
     }
+
     public function getOtp(): string
-{
-    return $this->otp;
-}
+    {
+        return $this->otp;
+    }
 }

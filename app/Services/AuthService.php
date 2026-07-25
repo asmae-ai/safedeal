@@ -20,7 +20,7 @@ class AuthService
 
     public function register(RegisterRequest $request): array
     {
-        $user  = User::create($request->validated());
+        $user = User::create($request->validated());
         $token = $user->createToken('auth_token')->accessToken;
 
         $this->emailVerificationService->send($user);
@@ -43,9 +43,9 @@ class AuthService
             Auth::guard('web')->logout();
             throw new HttpResponseException(
                 response()->json([
-                    'message'        => 'Your email address is not verified.',
+                    'message' => 'Your email address is not verified.',
                     'email_verified' => false,
-                    'resend_url'     => '/api/v1/auth/email/resend',
+                    'resend_url' => '/api/v1/auth/email/resend',
                 ], 403)
             );
         }

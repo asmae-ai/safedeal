@@ -13,10 +13,10 @@ it('sends verification code on register', function () {
     Notification::fake();
 
     $this->postJson('/api/v1/register', [
-        'name'     => 'Test User',
-        'email'    => 'test@example.com',
+        'name' => 'Test User',
+        'email' => 'test@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ])->assertStatus(201);
 
     $user = User::where('email', 'test@example.com')->first();
@@ -27,10 +27,10 @@ it('registered user has unverified email', function () {
     Notification::fake();
 
     $this->postJson('/api/v1/register', [
-        'name'     => 'Test User',
-        'email'    => 'test@example.com',
+        'name' => 'Test User',
+        'email' => 'test@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $user = User::where('email', 'test@example.com')->first();
@@ -41,27 +41,27 @@ it('unverified user cannot login', function () {
     Notification::fake();
 
     $this->postJson('/api/v1/register', [
-        'name'     => 'Test User',
-        'email'    => 'test@example.com',
+        'name' => 'Test User',
+        'email' => 'test@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $this->postJson('/api/v1/login', [
-        'email'    => 'test@example.com',
+        'email' => 'test@example.com',
         'password' => 'Password123',
 
     ])->assertStatus(403)
-  ->assertJsonPath('message', 'Your email address is not verified.');
-    });
+        ->assertJsonPath('message', 'Your email address is not verified.');
+});
 it('user can verify email with valid code', function () {
     Notification::fake();
 
     $this->postJson('/api/v1/register', [
-        'name'     => 'Test User',
-        'email'    => 'test@example.com',
+        'name' => 'Test User',
+        'email' => 'test@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $user = User::where('email', 'test@example.com')->first();
@@ -69,6 +69,7 @@ it('user can verify email with valid code', function () {
     $code = null;
     Notification::assertSentTo($user, EmailVerificationNotification::class, function ($n) use (&$code) {
         $code = $n->getCode();
+
         return true;
     });
 
@@ -84,10 +85,10 @@ it('user cannot verify with invalid code', function () {
     Notification::fake();
 
     $this->postJson('/api/v1/register', [
-        'name'     => 'Test User',
-        'email'    => 'test@example.com',
+        'name' => 'Test User',
+        'email' => 'test@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $user = User::where('email', 'test@example.com')->first();
@@ -102,10 +103,10 @@ it('verified user can login', function () {
     Notification::fake();
 
     $this->postJson('/api/v1/register', [
-        'name'     => 'Test User',
-        'email'    => 'test@example.com',
+        'name' => 'Test User',
+        'email' => 'test@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $user = User::where('email', 'test@example.com')->first();
@@ -113,6 +114,7 @@ it('verified user can login', function () {
     $code = null;
     Notification::assertSentTo($user, EmailVerificationNotification::class, function ($n) use (&$code) {
         $code = $n->getCode();
+
         return true;
     });
 
@@ -120,20 +122,20 @@ it('verified user can login', function () {
         ->postJson('/api/v1/auth/email/verify', ['code' => $code]);
 
     $this->postJson('/api/v1/login', [
-        'email'    => 'test@example.com',
+        'email' => 'test@example.com',
         'password' => 'Password123',
     ])->assertStatus(200)
-      ->assertJsonStructure(['user', 'token']);
+        ->assertJsonStructure(['user', 'token']);
 });
 
 it('user can resend verification code', function () {
     Notification::fake();
 
     $this->postJson('/api/v1/register', [
-        'name'     => 'Test User',
-        'email'    => 'test@example.com',
+        'name' => 'Test User',
+        'email' => 'test@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $user = User::where('email', 'test@example.com')->first();

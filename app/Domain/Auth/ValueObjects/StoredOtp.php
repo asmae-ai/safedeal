@@ -6,7 +6,7 @@ final readonly class StoredOtp
 {
     public function __construct(
         public readonly string $hashedValue,
-        public readonly int    $attempts,
+        public readonly int $attempts,
     ) {}
 
     public function verify(OtpCode $otp, string $secret): bool

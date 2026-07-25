@@ -31,11 +31,11 @@ class IdentityVerificationService
         }
 
         $verification = IdentityVerification::create([
-            'user_id'          => $user->id,
+            'user_id' => $user->id,
             'id_document_type' => $request->input('id_document_type'),
             'id_document_path' => $idDocumentPath,
-            'selfie_path'      => $selfiePath,
-            'status'           => 'pending',
+            'selfie_path' => $selfiePath,
+            'status' => 'pending',
         ]);
 
         // Mettre à jour le statut de l'utilisateur

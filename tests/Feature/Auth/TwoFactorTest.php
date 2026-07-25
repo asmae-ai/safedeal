@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\User;
 use App\Enums\UserRole;
-use Illuminate\Support\Facades\Redis;
-use Illuminate\Support\Facades\Notification;
+use App\Models\User;
 use App\Notifications\OtpNotification;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redis;
 
 beforeEach(function () {
     Redis::flushdb();
@@ -50,6 +50,7 @@ it('user can verify valid OTP', function () {
     $otp = null;
     Notification::assertSentTo($user, OtpNotification::class, function ($notification) use (&$otp) {
         $otp = $notification->getOtp();
+
         return true;
     });
 

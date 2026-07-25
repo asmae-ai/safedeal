@@ -5,10 +5,10 @@ use App\Models\User;
 
 it('can register a new vendor', function () {
     $response = $this->postJson('/api/v1/register', [
-        'name'     => 'Youssef Amrani',
-        'email'    => 'youssef@example.com',
+        'name' => 'Youssef Amrani',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $response->assertStatus(201)
@@ -20,10 +20,10 @@ it('cannot register with duplicate email', function () {
     User::factory()->create(['email' => 'youssef@example.com']);
 
     $response = $this->postJson('/api/v1/register', [
-        'name'     => 'Youssef Amrani',
-        'email'    => 'youssef@example.com',
+        'name' => 'Youssef Amrani',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
-        'role'     => 'vendor',
+        'role' => 'vendor',
     ]);
 
     $response->assertStatus(422);
@@ -31,10 +31,10 @@ it('cannot register with duplicate email', function () {
 
 it('cannot register with invalid role', function () {
     $response = $this->postJson('/api/v1/register', [
-        'name'     => 'Youssef Amrani',
-        'email'    => 'youssef@example.com',
+        'name' => 'Youssef Amrani',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
-        'role'     => 'superadmin',
+        'role' => 'superadmin',
     ]);
 
     $response->assertStatus(422);
@@ -42,13 +42,13 @@ it('cannot register with invalid role', function () {
 
 it('can login with valid credentials', function () {
     User::factory()->create([
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => bcrypt('Password123'),
-        'role'     => UserRole::VENDOR,
+        'role' => UserRole::VENDOR,
     ]);
 
     $response = $this->postJson('/api/v1/login', [
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => 'Password123',
     ]);
 
@@ -58,12 +58,12 @@ it('can login with valid credentials', function () {
 
 it('cannot login with wrong password', function () {
     User::factory()->create([
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => bcrypt('Password123'),
     ]);
 
     $response = $this->postJson('/api/v1/login', [
-        'email'    => 'youssef@example.com',
+        'email' => 'youssef@example.com',
         'password' => 'WrongPassword',
     ]);
 

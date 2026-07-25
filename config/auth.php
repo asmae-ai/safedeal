@@ -5,17 +5,17 @@ use App\Models\User;
 return [
 
     'defaults' => [
-        'guard'     => env('AUTH_GUARD', 'web'),
+        'guard' => env('AUTH_GUARD', 'web'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
     'guards' => [
         'web' => [
-            'driver'   => 'session',
+            'driver' => 'session',
             'provider' => 'users',
         ],
         'api' => [
-            'driver'   => 'passport',
+            'driver' => 'passport',
             'provider' => 'users',
         ],
     ],
@@ -23,15 +23,15 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model'  => env('AUTH_MODEL', User::class),
+            'model' => env('AUTH_MODEL', User::class),
         ],
     ],
 
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table'    => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire'   => 60,
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
             'throttle' => 60,
         ],
     ],
@@ -39,10 +39,10 @@ return [
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
     'otp' => [
-        'ttl'          => env('OTP_TTL', 600),
-        'cooldown'     => env('OTP_COOLDOWN', 120),
+        'ttl' => env('OTP_TTL', 600),
+        'cooldown' => env('OTP_COOLDOWN', 120),
         'max_attempts' => env('OTP_MAX_ATTEMPTS', 3),
-        'length'       => env('OTP_LENGTH', 6),
+        'length' => env('OTP_LENGTH', 6),
     ],
 
 ];

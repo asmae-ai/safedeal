@@ -18,7 +18,7 @@ final class DatabasePasswordResetTokenRepository
         DB::table(self::TABLE)->updateOrInsert(
             ['email' => $token->getEmail()],
             [
-                'token'      => Hash::make($token->getValue()),
+                'token' => Hash::make($token->getValue()),
                 'created_at' => now(),
             ],
         );
@@ -28,12 +28,16 @@ final class DatabasePasswordResetTokenRepository
     {
         $record = DB::table(self::TABLE)->where('email', $email)->first();
 
-        if (! $record) return false;
+        if (! $record) {
+            return false;
+        }
 
         $expiresAt = (new DateTimeImmutable($record->created_at))
             ->modify("+{$ttlMinutes} minutes");
 
-        if (new DateTimeImmutable() > $expiresAt) return false;
+        if (new DateTimeImmutable > $expiresAt) {
+            return false;
+        }
 
         return Hash::check($plainToken, $record->token);
     }

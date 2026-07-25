@@ -3,15 +3,16 @@
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeApprovedVendor(): User
 {
     return User::factory()->create([
-        'role'            => 'vendor',
+        'role' => 'vendor',
         'identity_status' => 'approved',
     ]);
 }
@@ -34,7 +35,7 @@ describe('POST /api/v1/transactions', function () {
         $vendor = makeApprovedVendor();
 
         $response = $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title'  => 'iPhone 14 Pro',
+            'title' => 'iPhone 14 Pro',
             'amount' => 1200.00,
         ]);
 
@@ -49,12 +50,12 @@ describe('POST /api/v1/transactions', function () {
         $vendor = makeApprovedVendor();
 
         $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title'  => 'Transaction 1',
+            'title' => 'Transaction 1',
             'amount' => 500,
         ]);
 
         $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title'  => 'Transaction 2',
+            'title' => 'Transaction 2',
             'amount' => 800,
         ]);
 
@@ -64,12 +65,12 @@ describe('POST /api/v1/transactions', function () {
 
     it('vendor non approuvé ne peut pas créer', function () {
         $vendor = User::factory()->create([
-            'role'            => 'vendor',
+            'role' => 'vendor',
             'identity_status' => 'pending',
         ]);
 
         $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title'  => 'iPhone 14',
+            'title' => 'iPhone 14',
             'amount' => 1200,
         ])->assertStatus(403);
     });
@@ -78,14 +79,14 @@ describe('POST /api/v1/transactions', function () {
         $buyer = makeBuyer();
 
         $this->actingAs($buyer, 'api')->postJson('/api/v1/transactions', [
-            'title'  => 'iPhone 14',
+            'title' => 'iPhone 14',
             'amount' => 1200,
         ])->assertStatus(403);
     });
 
     it('retourne 401 si non authentifié', function () {
         $this->postJson('/api/v1/transactions', [
-            'title'  => 'iPhone 14',
+            'title' => 'iPhone 14',
             'amount' => 1200,
         ])->assertStatus(401);
     });
@@ -102,7 +103,7 @@ describe('POST /api/v1/transactions', function () {
         $vendor = makeApprovedVendor();
 
         $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title'  => 'iPhone 14',
+            'title' => 'iPhone 14',
             'amount' => 0,
         ])->assertStatus(422)->assertJsonValidationErrors(['amount']);
     });
@@ -111,8 +112,8 @@ describe('POST /api/v1/transactions', function () {
         $vendor = makeApprovedVendor();
 
         $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title'    => 'iPhone 14',
-            'amount'   => 1200,
+            'title' => 'iPhone 14',
+            'amount' => 1200,
             'currency' => 'GBP',
         ])->assertStatus(422)->assertJsonValidationErrors(['currency']);
     });
@@ -170,10 +171,10 @@ describe('GET /api/v1/transactions', function () {
 describe('PATCH /api/v1/transactions/{id}/cancel', function () {
 
     it('vendor peut annuler sa transaction en pending_payment', function () {
-        $vendor      = makeApprovedVendor();
+        $vendor = makeApprovedVendor();
         $transaction = makeTransaction([
             'vendor_id' => $vendor->id,
-            'status'    => TransactionStatus::PendingPayment,
+            'status' => TransactionStatus::PendingPayment,
         ]);
 
         $this->actingAs($vendor, 'api')
@@ -183,10 +184,10 @@ describe('PATCH /api/v1/transactions/{id}/cancel', function () {
     });
 
     it('ne peut pas annuler si déjà payé', function () {
-        $vendor      = makeApprovedVendor();
+        $vendor = makeApprovedVendor();
         $transaction = makeTransaction([
             'vendor_id' => $vendor->id,
-            'status'    => TransactionStatus::PaymentReceived,
+            'status' => TransactionStatus::PaymentReceived,
         ]);
 
         $this->actingAs($vendor, 'api')
@@ -195,8 +196,8 @@ describe('PATCH /api/v1/transactions/{id}/cancel', function () {
     });
 
     it('un autre vendor ne peut pas annuler', function () {
-        $vendor1     = makeApprovedVendor();
-        $vendor2     = makeApprovedVendor();
+        $vendor1 = makeApprovedVendor();
+        $vendor2 = makeApprovedVendor();
         $transaction = makeTransaction(['vendor_id' => $vendor1->id]);
 
         $this->actingAs($vendor2, 'api')

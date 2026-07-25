@@ -12,9 +12,28 @@ final readonly class OtpConfiguration
         private string $secret,
     ) {}
 
-    public function ttl(): int         { return $this->ttl; }
-    public function cooldown(): int    { return $this->cooldown; }
-    public function maxAttempts(): int { return $this->maxAttempts; }
-    public function length(): int      { return $this->length; }
-    public function secret(): string   { return $this->secret; }
+    public function ttl(): int
+    {
+        return $this->ttl;
+    }
+
+    public function cooldown(): int
+    {
+        return $this->cooldown;
+    }
+
+    public function maxAttempts(): int
+    {
+        return $this->maxAttempts;
+    }
+
+    public function length(): int
+    {
+        return $this->length;
+    }
+
+    public function secret(): string
+    {
+        return $this->secret;
+    }
 }

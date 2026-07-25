@@ -2,7 +2,6 @@
 
 namespace Tests;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Laravel\Passport\Client;
@@ -15,6 +14,8 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        $this->artisan('passport:keys', ['--force' => true]);
+
         Client::forceCreate([
             'id'            => '9f853b00-0001-0000-0000-000000000001',
             'name'          => 'Test Personal Access Client',
@@ -24,10 +25,5 @@ abstract class TestCase extends BaseTestCase
             'grant_types'   => ['personal_access'],
             'revoked'       => false,
         ]);
-    }
-
-    protected function actingAsUser(User $user): static
-    {
-        return $this->actingAs($user, 'api');
     }
 }

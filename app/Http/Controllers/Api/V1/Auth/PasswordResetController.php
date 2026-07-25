@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\ForgotPasswordRequest;
-use App\Http\Requests\ResetPasswordRequest;
-use App\Models\User;
 use App\Domain\Auth\ValueObjects\PasswordResetToken;
 use App\Domain\Shared\Contracts\AuditLogger;
 use App\Domain\Shared\ValueObjects\SecurityEvent;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\ForgotPasswordRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Infrastructure\Auth\DatabasePasswordResetTokenRepository;
+use App\Models\User;
 use App\Notifications\PasswordResetNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -20,7 +20,7 @@ final class PasswordResetController extends Controller
 {
     public function __construct(
         private readonly DatabasePasswordResetTokenRepository $tokenRepository,
-        private readonly AuditLogger                          $auditLogger,
+        private readonly AuditLogger $auditLogger,
     ) {}
 
     public function forgot(ForgotPasswordRequest $request): JsonResponse

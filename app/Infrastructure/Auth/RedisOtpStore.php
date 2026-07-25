@@ -19,15 +19,15 @@ final class RedisOtpStore implements OtpStore
         $hashed = $this->hash($otp->value);
 
         Redis::pipeline(function ($pipe) use ($userId, $hashed) {
-            $pipe->setex($this->key($userId, 'code'),     $this->config->ttl(),      $hashed);
+            $pipe->setex($this->key($userId, 'code'), $this->config->ttl(), $hashed);
             $pipe->setex($this->key($userId, 'cooldown'), $this->config->cooldown(), now()->timestamp);
-            $pipe->setex($this->key($userId, 'attempts'), $this->config->ttl(),      0);
+            $pipe->setex($this->key($userId, 'attempts'), $this->config->ttl(), 0);
         });
     }
 
     public function retrieve(int $userId): ?StoredOtp
     {
-        $hashed   = Redis::get($this->key($userId, 'code'));
+        $hashed = Redis::get($this->key($userId, 'code'));
         $attempts = (int) Redis::get($this->key($userId, 'attempts'));
 
         if ($hashed === null) {
@@ -36,7 +36,7 @@ final class RedisOtpStore implements OtpStore
 
         return new StoredOtp(
             hashedValue: $hashed,
-            attempts:    $attempts,
+            attempts: $attempts,
         );
     }
 

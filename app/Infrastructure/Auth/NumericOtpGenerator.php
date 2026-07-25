@@ -18,10 +18,10 @@ final class NumericOtpGenerator implements OtpGenerator
 
         return new OtpCode(
             str_pad(
-                string:     (string) random_int(0, $max),
-                length:     $this->config->length(),
+                string: (string) random_int(0, $max),
+                length: $this->config->length(),
                 pad_string: '0',
-                pad_type:   STR_PAD_LEFT,
+                pad_type: STR_PAD_LEFT,
             )
         );
     }

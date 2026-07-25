@@ -17,11 +17,11 @@ use App\Domain\Shared\ValueObjects\SecurityEvent;
 final class TwoFactorService
 {
     public function __construct(
-        private readonly OtpStore         $store,
-        private readonly OtpNotifier      $notifier,
-        private readonly OtpGenerator     $generator,
+        private readonly OtpStore $store,
+        private readonly OtpNotifier $notifier,
+        private readonly OtpGenerator $generator,
         private readonly OtpConfiguration $config,
-        private readonly AuditLogger      $audit,
+        private readonly AuditLogger $audit,
     ) {}
 
     public function send(OtpRecipient $recipient, string $ip): void
@@ -29,7 +29,7 @@ final class TwoFactorService
         if ($this->store->hasRecentlySent($recipient->id())) {
             $this->audit->record(SecurityEvent::warn('otp.cooldown', [
                 'user_id' => $recipient->id(),
-                'ip'      => $ip,
+                'ip' => $ip,
             ]));
             throw OtpCooldownException::make();
         }
@@ -42,7 +42,7 @@ final class TwoFactorService
 
         $this->audit->record(SecurityEvent::info('otp.sent', [
             'user_id' => $recipient->id(),
-            'ip'      => $ip,
+            'ip' => $ip,
         ]));
     }
 
@@ -57,7 +57,7 @@ final class TwoFactorService
         if ($stored->isBlocked($this->config->maxAttempts())) {
             $this->audit->record(SecurityEvent::error('otp.blocked', [
                 'user_id' => $recipient->id(),
-                'ip'      => $ip,
+                'ip' => $ip,
             ]));
             throw OtpBlockedException::make();
         }
@@ -68,7 +68,7 @@ final class TwoFactorService
             $this->store->incrementAttempts($recipient->id());
             $this->audit->record(SecurityEvent::warn('otp.failed', [
                 'user_id' => $recipient->id(),
-                'ip'      => $ip,
+                'ip' => $ip,
             ]));
             throw InvalidOtpException::make();
         }
@@ -76,7 +76,7 @@ final class TwoFactorService
         $this->store->delete($recipient->id());
         $this->audit->record(SecurityEvent::info('otp.verified', [
             'user_id' => $recipient->id(),
-            'ip'      => $ip,
+            'ip' => $ip,
         ]));
     }
 }

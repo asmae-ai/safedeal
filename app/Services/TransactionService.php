@@ -13,12 +13,12 @@ class TransactionService
     {
         return DB::transaction(function () use ($vendor, $data) {
             return Transaction::create([
-                'vendor_id'   => $vendor->id,
-                'title'       => $data['title'],
+                'vendor_id' => $vendor->id,
+                'title' => $data['title'],
                 'description' => $data['description'] ?? null,
-                'amount'      => $data['amount'],
-                'currency'    => $data['currency'] ?? 'MAD',
-                'status'      => TransactionStatus::PendingPayment,
+                'amount' => $data['amount'],
+                'currency' => $data['currency'] ?? 'MAD',
+                'status' => TransactionStatus::PendingPayment,
             ]);
         });
     }
@@ -32,12 +32,12 @@ class TransactionService
         }
 
         return DB::transaction(function () use ($transaction, $newStatus) {
-            $timestamps = match($newStatus) {
-                TransactionStatus::PaymentReceived => ['payment_at'   => now()],
-                TransactionStatus::InShipping      => ['shipped_at'   => now()],
-                TransactionStatus::Delivered       => ['delivered_at' => now()],
-                TransactionStatus::Closed          => ['closed_at'    => now()],
-                default                            => [],
+            $timestamps = match ($newStatus) {
+                TransactionStatus::PaymentReceived => ['payment_at' => now()],
+                TransactionStatus::InShipping => ['shipped_at' => now()],
+                TransactionStatus::Delivered => ['delivered_at' => now()],
+                TransactionStatus::Closed => ['closed_at' => now()],
+                default => [],
             };
 
             $transaction->update(array_merge(

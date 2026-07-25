@@ -7,7 +7,7 @@ final readonly class SecurityEvent
     public function __construct(
         public readonly string $name,
         public readonly string $level,
-        public readonly array  $context = [],
+        public readonly array $context = [],
     ) {}
 
     public static function info(string $name, array $context = []): self

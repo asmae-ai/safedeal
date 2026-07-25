@@ -9,13 +9,14 @@ use Illuminate\Support\Facades\Redis;
 
 final class RedisEmailVerificationStore implements EmailVerificationStore
 {
-    private const TTL      = 600;  // 10 minutes
+    private const TTL = 600;  // 10 minutes
+
     private const COOLDOWN = 60;   // 1 minute
 
     public function store(int $userId, string $code): void
     {
         Redis::pipeline(function ($pipe) use ($userId, $code) {
-            $pipe->setex($this->key($userId, 'code'),     self::TTL,      $code);
+            $pipe->setex($this->key($userId, 'code'), self::TTL, $code);
             $pipe->setex($this->key($userId, 'cooldown'), self::COOLDOWN, now()->timestamp);
         });
     }

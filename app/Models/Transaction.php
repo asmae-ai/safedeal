@@ -30,12 +30,12 @@ class Transaction extends Model
     ];
 
     protected $casts = [
-        'status'       => TransactionStatus::class,
-        'amount'       => 'decimal:2',
-        'payment_at'   => 'datetime',
-        'shipped_at'   => 'datetime',
+        'status' => TransactionStatus::class,
+        'amount' => 'decimal:2',
+        'payment_at' => 'datetime',
+        'shipped_at' => 'datetime',
         'delivered_at' => 'datetime',
-        'closed_at'    => 'datetime',
+        'closed_at' => 'datetime',
     ];
 
     protected static function booted(): void

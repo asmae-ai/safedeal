@@ -12,7 +12,7 @@ class CorsMiddleware
         // Gérer les requêtes OPTIONS (preflight) avant tout
         if ($request->getMethod() === 'OPTIONS') {
             return response()->json('OK', 200, [
-                'Access-Control-Allow-Origin'  => '*',
+                'Access-Control-Allow-Origin' => '*',
                 'Access-Control-Allow-Methods' => 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers' => 'Content-Type, Authorization, Accept, X-Requested-With, ngrok-skip-browser-warning',
             ]);

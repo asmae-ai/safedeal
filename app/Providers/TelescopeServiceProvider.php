@@ -2,13 +2,14 @@
 
 namespace App\Providers;
 
+use App\Domain\Auth\Contracts\EmailVerificationStore;
+use App\Infrastructure\Auth\RedisEmailVerificationStore;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Telescope\IncomingEntry;
 use Laravel\Telescope\Telescope;
 use Laravel\Telescope\TelescopeApplicationServiceProvider;
-use App\Domain\Auth\Contracts\EmailVerificationStore;
-use App\Infrastructure\Auth\RedisEmailVerificationStore;
+
 class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 {
     /**

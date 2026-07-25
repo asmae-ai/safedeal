@@ -15,11 +15,11 @@ class IdentityVerificationResource extends JsonResource
         $verification = $this->resource;
 
         return [
-            'id'               => $verification->id,
-            'status'           => $verification->status,
+            'id' => $verification->id,
+            'status' => $verification->status,
             'id_document_type' => $verification->id_document_type,
-            'submitted_at'     => $verification->created_at?->toISOString(),
-            'reviewed_at'      => $verification->reviewed_at?->toISOString(),
+            'submitted_at' => $verification->created_at?->toISOString(),
+            'reviewed_at' => $verification->reviewed_at?->toISOString(),
             'rejection_reason' => $verification->rejection_reason,
         ];
     }

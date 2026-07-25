@@ -3,10 +3,11 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\IdentityVerificationController;
 use App\Http\Controllers\Api\TransactionController;
-use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
-use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\EmailVerificationController;
+use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
+use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
+use Illuminate\Support\Facades\Route;
+
 Route::prefix('v1')->group(function (): void {
 
     // Public routes
@@ -21,7 +22,7 @@ Route::prefix('v1')->group(function (): void {
     // Password Reset — public
     Route::prefix('auth/password')->group(function (): void {
         Route::post('/forgot', [PasswordResetController::class, 'forgot']);
-        Route::post('/reset',  [PasswordResetController::class, 'reset']);
+        Route::post('/reset', [PasswordResetController::class, 'reset']);
     });
 
     // Public — accessible sans auth via lien sécurisé
@@ -43,13 +44,13 @@ Route::prefix('v1')->group(function (): void {
 
         // 2FA
         Route::prefix('auth/2fa')->group(function (): void {
-            Route::post('/send',   [TwoFactorController::class, 'send']);
+            Route::post('/send', [TwoFactorController::class, 'send']);
             Route::post('/verify', [TwoFactorController::class, 'verify']);
         });
         Route::middleware('auth:api')->prefix('auth/email')->group(function () {
-    Route::post('verify', [EmailVerificationController::class, 'verify']);
-    Route::post('resend', [EmailVerificationController::class, 'resend']);
-});
+            Route::post('verify', [EmailVerificationController::class, 'verify']);
+            Route::post('resend', [EmailVerificationController::class, 'resend']);
+        });
     });
 
 });

@@ -20,13 +20,13 @@ final class PasswordResetNotification extends Notification
     }
 
     public function getToken(): string
-{
-    return $this->token;
-}
+    {
+        return $this->token;
+    }
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage())
+        return (new MailMessage)
             ->subject('SafeDeal — Reset your password')
             ->greeting("Hello {$notifiable->name},")
             ->line('You requested a password reset.')

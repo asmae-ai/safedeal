@@ -20,12 +20,12 @@ class TransactionController extends Controller
 
         $transaction = $this->service->create(
             vendor: $request->user(),
-            data:   $request->validated(),
+            data: $request->validated(),
         );
 
         return response()->json([
             'message' => 'Transaction créée avec succès.',
-            'data'    => new TransactionResource($transaction->load('vendor')),
+            'data' => new TransactionResource($transaction->load('vendor')),
         ], 201);
     }
 
@@ -47,7 +47,7 @@ class TransactionController extends Controller
         $transactions = Transaction::with(['vendor', 'buyer'])
             ->where(function ($query) use ($request) {
                 $query->where('vendor_id', $request->user()->id)
-                      ->orWhere('buyer_id', $request->user()->id);
+                    ->orWhere('buyer_id', $request->user()->id);
             })
             ->latest()
             ->paginate(15);
@@ -56,8 +56,8 @@ class TransactionController extends Controller
             'data' => TransactionResource::collection($transactions->items()),
             'meta' => [
                 'current_page' => $transactions->currentPage(),
-                'last_page'    => $transactions->lastPage(),
-                'total'        => $transactions->total(),
+                'last_page' => $transactions->lastPage(),
+                'total' => $transactions->total(),
             ],
         ]);
     }
@@ -70,7 +70,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'message' => 'Transaction annulée.',
-            'data'    => new TransactionResource($transaction->load('vendor')),
+            'data' => new TransactionResource($transaction->load('vendor')),
         ]);
     }
 }

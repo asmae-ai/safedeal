@@ -11,7 +11,7 @@ use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable implements OtpRecipient
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'name',
@@ -33,9 +33,9 @@ class User extends Authenticatable implements OtpRecipient
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'role'              => UserRole::class,
-            'reputation_score'  => 'decimal:2',
+            'password' => 'hashed',
+            'role' => UserRole::class,
+            'reputation_score' => 'decimal:2',
         ];
     }
 
@@ -68,5 +68,4 @@ class User extends Authenticatable implements OtpRecipient
     {
         return $this->identity_status === 'approved';
     }
-   
 }
