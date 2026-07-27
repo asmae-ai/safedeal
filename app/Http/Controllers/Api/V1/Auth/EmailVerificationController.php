@@ -26,6 +26,8 @@ final class EmailVerificationController extends Controller
 
         $verified = $this->service->verify($user, $request->validated('code'));
 
+        Log::info('Email verification attempt for user ID: ' . $user->id() . ', result: ' . ($verified));
+
         if (! $verified) {
             return response()->json(['message' => 'Invalid or expired verification code.'], 422);
         }
