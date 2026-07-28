@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-
+use App\Enums\TransactionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateTransactionRequest;
 use App\Http\Resources\TransactionResource;
@@ -38,6 +38,29 @@ class TransactionController extends Controller
         return response()->json([
             'data' => new TransactionResource($transaction),
         ]);
+    }
+        public function pay(Request $request, Transaction $transaction): JsonResponse
+    {
+        $transaction = $this->service->transitionTo($transaction, TransactionStatus::PaymentReceived);
+        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
+    }
+
+    public function ship(Request $request, Transaction $transaction): JsonResponse
+    {
+        $transaction = $this->service->transitionTo($transaction, TransactionStatus::InShipping);
+        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
+    }
+
+    public function deliver(Request $request, Transaction $transaction): JsonResponse
+    {
+        $transaction = $this->service->transitionTo($transaction, TransactionStatus::Delivered);
+        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
+    }
+
+    public function close(Request $request, Transaction $transaction): JsonResponse
+    {
+        $transaction = $this->service->transitionTo($transaction, TransactionStatus::Closed);
+        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
     }
 
     public function index(Request $request): JsonResponse

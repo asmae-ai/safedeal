@@ -23,7 +23,7 @@ class Transaction extends Model
         'status',
         'tracking_number',
         'shipping_proof_path',
-        'payment_at',
+        'paid_at',
         'shipped_at',
         'delivered_at',
         'closed_at',
@@ -32,7 +32,7 @@ class Transaction extends Model
     protected $casts = [
         'status' => TransactionStatus::class,
         'amount' => 'decimal:2',
-        'payment_at' => 'datetime',
+        'paid_at' => 'datetime',
         'shipped_at' => 'datetime',
         'delivered_at' => 'datetime',
         'closed_at' => 'datetime',

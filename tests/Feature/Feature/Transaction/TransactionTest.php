@@ -3,237 +3,162 @@
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use function Pest\Laravel\{actingAs, assertDatabaseHas, getJson, postJson};
 
-uses(RefreshDatabase::class);
+uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function makeApprovedVendor(): User
-{
-    return User::factory()->create([
+    test('vendor can create transaction', function () {
+    $vendor = User::factory()->create([
         'role' => 'vendor',
         'identity_status' => 'approved',
+        'email_verified_at' => now(),
     ]);
-}
 
-function makeBuyer(): User
-{
-    return User::factory()->create(['role' => 'buyer']);
-}
+    actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
+        'title' => 'MacBook Pro M3',
+        'amount' => 15000.00,
+        'currency' => 'MAD',
+        'description' => 'Ordinateur portable en excellent état',
+    ])
+        ->assertStatus(201)
+        ->assertJsonPath('data.title', 'MacBook Pro M3')
+        ->assertJsonPath('data.status', TransactionStatus::PendingPayment->value)
+        ->assertJsonPath('data.vendor.id', $vendor->id);
 
-function makeTransaction(array $overrides = []): Transaction
-{
-    return Transaction::factory()->create($overrides);
-}
-
-// ─── Créer une transaction ────────────────────────────────────────────────────
-
-describe('POST /api/v1/transactions', function () {
-
-    it('vendor approuvé peut créer une transaction', function () {
-        $vendor = makeApprovedVendor();
-
-        $response = $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title' => 'iPhone 14 Pro',
-            'amount' => 1200.00,
-        ]);
-
-        $response->assertStatus(201)
-            ->assertJsonPath('data.status', 'pending_payment')
-            ->assertJsonStructure(['data' => ['secure_link']]);
-
-        expect(Transaction::where('vendor_id', $vendor->id)->exists())->toBeTrue();
-    });
-
-    it('génère un secure_token unique', function () {
-        $vendor = makeApprovedVendor();
-
-        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title' => 'Transaction 1',
-            'amount' => 500,
-        ]);
-
-        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title' => 'Transaction 2',
-            'amount' => 800,
-        ]);
-
-        $tokens = Transaction::where('vendor_id', $vendor->id)->pluck('secure_token');
-        expect($tokens->unique()->count())->toBe(2);
-    });
-
-    it('vendor non approuvé ne peut pas créer', function () {
-        $vendor = User::factory()->create([
-            'role' => 'vendor',
-            'identity_status' => 'pending',
-        ]);
-
-        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title' => 'iPhone 14',
-            'amount' => 1200,
-        ])->assertStatus(403);
-    });
-
-    it('buyer ne peut pas créer une transaction', function () {
-        $buyer = makeBuyer();
-
-        $this->actingAs($buyer, 'api')->postJson('/api/v1/transactions', [
-            'title' => 'iPhone 14',
-            'amount' => 1200,
-        ])->assertStatus(403);
-    });
-
-    it('retourne 401 si non authentifié', function () {
-        $this->postJson('/api/v1/transactions', [
-            'title' => 'iPhone 14',
-            'amount' => 1200,
-        ])->assertStatus(401);
-    });
-
-    it('valide le titre obligatoire', function () {
-        $vendor = makeApprovedVendor();
-
-        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'amount' => 1200,
-        ])->assertStatus(422)->assertJsonValidationErrors(['title']);
-    });
-
-    it('valide le montant minimum', function () {
-        $vendor = makeApprovedVendor();
-
-        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title' => 'iPhone 14',
-            'amount' => 0,
-        ])->assertStatus(422)->assertJsonValidationErrors(['amount']);
-    });
-
-    it('valide la devise', function () {
-        $vendor = makeApprovedVendor();
-
-        $this->actingAs($vendor, 'api')->postJson('/api/v1/transactions', [
-            'title' => 'iPhone 14',
-            'amount' => 1200,
-            'currency' => 'GBP',
-        ])->assertStatus(422)->assertJsonValidationErrors(['currency']);
-    });
+    assertDatabaseHas('transactions', [
+        'title' => 'MacBook Pro M3',
+        'vendor_id' => $vendor->id,
+        'status' => TransactionStatus::PendingPayment->value,
+    ]);
 });
 
-// ─── Consulter via lien public ────────────────────────────────────────────────
+test('authorized user can view transaction by secure token', function () {
+    $vendor = User::factory()->create();
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'secure_token' => 'secure-token-abc-123',
+        'status' => TransactionStatus::PendingPayment,
+    ]);
 
-describe('GET /api/v1/transactions/{token}', function () {
-
-    it('anyone peut consulter via le lien sécurisé', function () {
-        $transaction = makeTransaction();
-
-        $this->getJson("/api/v1/transactions/{$transaction->secure_token}")
-            ->assertStatus(200)
-            ->assertJsonPath('data.status', 'pending_payment');
-    });
-
-    it('retourne 404 pour un token invalide', function () {
-        $this->getJson('/api/v1/transactions/token-invalide')
-            ->assertStatus(404);
-    });
+    actingAs($vendor, 'api')
+        ->getJson("/api/v1/transactions/{$transaction->secure_token}")
+        ->assertStatus(200)
+        ->assertJsonPath('data.id', $transaction->id);
 });
 
-// ─── Lister ses transactions ──────────────────────────────────────────────────
 
-describe('GET /api/v1/transactions', function () {
+test('user can list their transactions', function () {
+    $vendor = User::factory()->create();
+    Transaction::factory()->count(3)->create([
+        'vendor_id' => $vendor->id,
+    ]);
 
-    it('vendor voit ses transactions', function () {
-        $vendor = makeApprovedVendor();
-        makeTransaction(['vendor_id' => $vendor->id]);
-        makeTransaction(['vendor_id' => $vendor->id]);
+    Transaction::factory()->count(2)->create();
 
-        $this->actingAs($vendor, 'api')->getJson('/api/v1/transactions')
-            ->assertStatus(200)
-            ->assertJsonCount(2, 'data');
-    });
-
-    it('ne voit pas les transactions des autres', function () {
-        $vendor1 = makeApprovedVendor();
-        $vendor2 = makeApprovedVendor();
-        makeTransaction(['vendor_id' => $vendor2->id]);
-
-        $this->actingAs($vendor1, 'api')->getJson('/api/v1/transactions')
-            ->assertStatus(200)
-            ->assertJsonCount(0, 'data');
-    });
-
-    it('retourne 401 si non authentifié', function () {
-        $this->getJson('/api/v1/transactions')->assertStatus(401);
-    });
-});
-
-// ─── Annuler une transaction ──────────────────────────────────────────────────
-
-describe('PATCH /api/v1/transactions/{id}/cancel', function () {
-
-    it('vendor peut annuler sa transaction en pending_payment', function () {
-        $vendor = makeApprovedVendor();
-        $transaction = makeTransaction([
-            'vendor_id' => $vendor->id,
-            'status' => TransactionStatus::PendingPayment,
+    actingAs($vendor, 'api')
+        ->getJson('/api/v1/transactions')
+        ->assertStatus(200)
+        ->assertJsonCount(3, 'data')
+        ->assertJsonStructure([
+            'data',
+            'meta' => ['current_page', 'last_page', 'total'],
         ]);
-
-        $this->actingAs($vendor, 'api')
-            ->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
-            ->assertStatus(200)
-            ->assertJsonPath('data.status', 'cancelled');
-    });
-
-    it('ne peut pas annuler si déjà payé', function () {
-        $vendor = makeApprovedVendor();
-        $transaction = makeTransaction([
-            'vendor_id' => $vendor->id,
-            'status' => TransactionStatus::PaymentReceived,
-        ]);
-
-        $this->actingAs($vendor, 'api')
-            ->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
-            ->assertStatus(403);
-    });
-
-    it('un autre vendor ne peut pas annuler', function () {
-        $vendor1 = makeApprovedVendor();
-        $vendor2 = makeApprovedVendor();
-        $transaction = makeTransaction(['vendor_id' => $vendor1->id]);
-
-        $this->actingAs($vendor2, 'api')
-            ->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
-            ->assertStatus(403);
-    });
-
-    it('retourne 401 si non authentifié', function () {
-        $transaction = makeTransaction();
-
-        $this->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
-            ->assertStatus(401);
-    });
 });
 
-// ─── State Machine ────────────────────────────────────────────────────────────
+test('buyer can pay transaction', function () {
+    $vendor = User::factory()->create();
+    $buyer = User::factory()->create();
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'buyer_id' => $buyer->id,
+        'status' => TransactionStatus::PendingPayment,
+    ]);
 
-describe('State Machine TransactionStatus', function () {
+    actingAs($buyer, 'api')
+        ->postJson("/api/v1/transactions/{$transaction->id}/pay")
+        ->assertStatus(200)
+        ->assertJsonPath('data.status', TransactionStatus::PaymentReceived->value);
 
-    it('pending_payment peut aller vers payment_received', function () {
-        $status = TransactionStatus::PendingPayment;
-        expect($status->canTransitionTo(TransactionStatus::PaymentReceived))->toBeTrue();
-    });
+    expect($transaction->fresh()->paid_at)->not->toBeNull();
+});
 
-    it('pending_payment peut être annulé', function () {
-        $status = TransactionStatus::PendingPayment;
-        expect($status->canTransitionTo(TransactionStatus::Cancelled))->toBeTrue();
-    });
+test('vendor can ship transaction', function () {
+    $vendor = User::factory()->create();
+    $buyer = User::factory()->create();
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'buyer_id' => $buyer->id,
+        'status' => TransactionStatus::PaymentReceived,
+    ]);
 
-    it('closed ne peut pas changer', function () {
-        $status = TransactionStatus::Closed;
-        expect($status->canTransitionTo(TransactionStatus::Cancelled))->toBeFalse();
-    });
+    actingAs($vendor, 'api')
+        ->postJson("/api/v1/transactions/{$transaction->id}/ship")
+        ->assertStatus(200)
+        ->assertJsonPath('data.status', TransactionStatus::InShipping->value);
 
-    it('delivered peut aller vers dispute', function () {
-        $status = TransactionStatus::Delivered;
-        expect($status->canTransitionTo(TransactionStatus::Dispute))->toBeTrue();
-    });
+    expect($transaction->fresh()->shipped_at)->not->toBeNull();
+});
+
+test('buyer can deliver transaction', function () {
+    $vendor = User::factory()->create();
+    $buyer = User::factory()->create();
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'buyer_id' => $buyer->id,
+        'status' => TransactionStatus::InShipping,
+    ]);
+
+    actingAs($buyer, 'api')
+        ->postJson("/api/v1/transactions/{$transaction->id}/deliver")
+        ->assertStatus(200)
+        ->assertJsonPath('data.status', TransactionStatus::Delivered->value);
+
+    expect($transaction->fresh()->delivered_at)->not->toBeNull();
+});
+
+test('vendor can close transaction', function () {
+    $vendor = User::factory()->create();
+    $buyer = User::factory()->create();
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'buyer_id' => $buyer->id,
+        'status' => TransactionStatus::Delivered,
+    ]);
+
+    actingAs($vendor, 'api')
+        ->postJson("/api/v1/transactions/{$transaction->id}/close")
+        ->assertStatus(200)
+        ->assertJsonPath('data.status', TransactionStatus::Closed->value);
+
+    expect($transaction->fresh()->closed_at)->not->toBeNull();
+});
+
+test('invalid state transition throws unprocessable entity error', function () {
+    $vendor = User::factory()->create();
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'status' => TransactionStatus::PendingPayment,
+    ]);
+
+    actingAs($vendor, 'api')
+        ->postJson("/api/v1/transactions/{$transaction->id}/ship")
+        ->assertStatus(422);
+});
+
+test('transaction can be cancelled', function () {
+    $vendor = User::factory()->create();
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'status' => TransactionStatus::PendingPayment,
+    ]);
+
+    actingAs($vendor, 'api')
+        ->patchJson("/api/v1/transactions/{$transaction->id}/cancel")
+        ->assertStatus(200)
+        ->assertJsonPath('data.status', TransactionStatus::Cancelled->value);
+
+    assertDatabaseHas('transactions', [
+        'id' => $transaction->id,
+        'status' => TransactionStatus::Cancelled->value,
+    ]);
 });

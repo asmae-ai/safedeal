@@ -41,7 +41,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/transactions', [TransactionController::class, 'store']);
         Route::get('/transactions', [TransactionController::class, 'index']);
         Route::patch('/transactions/{transaction}/cancel', [TransactionController::class, 'cancel']);
-
+        
         // 2FA
         Route::prefix('auth/2fa')->group(function (): void {
             Route::post('/send', [TwoFactorController::class, 'send']);
@@ -51,6 +51,13 @@ Route::prefix('v1')->group(function (): void {
             Route::post('verify', [EmailVerificationController::class, 'verify']);
             Route::post('resend', [EmailVerificationController::class, 'resend']);
         });
+
+            Route::middleware('auth:api')->group(function () {
+        Route::post('/transactions/{transaction}/pay',     [TransactionController::class, 'pay']);
+        Route::post('/transactions/{transaction}/ship',    [TransactionController::class, 'ship']);
+        Route::post('/transactions/{transaction}/deliver', [TransactionController::class, 'deliver']);
+        Route::post('/transactions/{transaction}/close',   [TransactionController::class, 'close']);
+    });
     });
 
 });
