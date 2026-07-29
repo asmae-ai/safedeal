@@ -2,9 +2,10 @@
 
 namespace App\Policies;
 
+use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Enums\TransactionStatus;
+
 class TransactionPolicy
 {
     public function create(User $user): bool
@@ -30,7 +31,8 @@ class TransactionPolicy
     {
         return true;
     }
-        public function checkout(User $user, Transaction $transaction): bool
+
+    public function checkout(User $user, Transaction $transaction): bool
     {
         return $user->id === $transaction->buyer_id
             && $transaction->status === TransactionStatus::PendingPayment;

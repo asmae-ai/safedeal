@@ -40,8 +40,8 @@ class TransactionController extends Controller
 
         $frontendUrl = config('app.frontend_url');
 
-        $successUrl = $frontendUrl . '/transactions/' . $transaction->secure_token . '?payment=success';
-        $cancelUrl  = $frontendUrl . '/transactions/' . $transaction->secure_token . '?payment=cancelled';
+        $successUrl = $frontendUrl.'/transactions/'.$transaction->secure_token.'?payment=success';
+        $cancelUrl = $frontendUrl.'/transactions/'.$transaction->secure_token.'?payment=cancelled';
 
         $session = $this->paymentGateway->createCheckoutSession(
             $transaction,
@@ -51,7 +51,7 @@ class TransactionController extends Controller
 
         return response()->json([
             'checkout_url' => $session['url'],
-            'session_id'   => $session['id'],
+            'session_id' => $session['id'],
         ]);
     }
 

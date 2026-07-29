@@ -10,6 +10,7 @@ use App\Http\Requests\VerifyEmailRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+
 final class EmailVerificationController extends Controller
 {
     public function __construct(
@@ -26,7 +27,7 @@ final class EmailVerificationController extends Controller
 
         $verified = $this->service->verify($user, $request->validated('code'));
 
-        Log::info('Email verification attempt for user ID: ' . $user->id() . ', result: ' . ($verified));
+        Log::info('Email verification attempt for user ID: '.$user->id().', result: '.($verified));
 
         if (! $verified) {
             return response()->json(['message' => 'Invalid or expired verification code.'], 422);

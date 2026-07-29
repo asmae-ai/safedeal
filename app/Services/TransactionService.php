@@ -10,6 +10,7 @@ use App\Models\User;
 use DomainException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Stripe\Event;
 
 class TransactionService
 {
@@ -26,12 +27,12 @@ class TransactionService
 
         return DB::transaction(function () use ($vendor, $data) {
             return Transaction::create([
-                'vendor_id'   => $vendor->id,
-                'title'       => $data['title'],
+                'vendor_id' => $vendor->id,
+                'title' => $data['title'],
                 'description' => $data['description'] ?? null,
-                'amount'      => $data['amount'],
-                'currency'    => $data['currency'] ?? 'MAD',
-                'status'      => TransactionStatus::PendingPayment,
+                'amount' => $data['amount'],
+                'currency' => $data['currency'] ?? 'MAD',
+                'status' => TransactionStatus::PendingPayment,
             ]);
         });
     }
@@ -69,11 +70,11 @@ class TransactionService
 
         return DB::transaction(function () use ($transaction, $newStatus) {
             $timestamps = match ($newStatus) {
-                TransactionStatus::PaymentReceived => ['paid_at'      => now()],
-                TransactionStatus::InShipping      => ['shipped_at'   => now()],
-                TransactionStatus::Delivered       => ['delivered_at' => now()],
-                TransactionStatus::Closed          => ['closed_at'    => now()],
-                default                            => [],
+                TransactionStatus::PaymentReceived => ['paid_at' => now()],
+                TransactionStatus::InShipping => ['shipped_at' => now()],
+                TransactionStatus::Delivered => ['delivered_at' => now()],
+                TransactionStatus::Closed => ['closed_at' => now()],
+                default => [],
             };
 
             $transaction->forceFill(array_merge(
@@ -89,13 +90,14 @@ class TransactionService
     {
         return $this->transitionTo($transaction, TransactionStatus::Cancelled);
     }
-    public function handleStripeWebhook(\Stripe\Event $event): void
+
+    public function handleStripeWebhook(Event $event): void
     {
         if ($event->type !== 'checkout.session.completed') {
             return;
         }
 
-        $session       = $event->data->object;
+        $session = $event->data->object;
         $transactionId = $session->metadata->transaction_id ?? null;
 
         if (! $transactionId) {

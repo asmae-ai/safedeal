@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\Transaction;
-use Stripe\StripeClient;
-use Stripe\Exception\ApiErrorException;
 use App\Contracts\PaymentGatewayInterface;
+use App\Models\Transaction;
+use Stripe\Exception\ApiErrorException;
+use Stripe\StripeClient;
 
 class StripeService implements PaymentGatewayInterface
 {
     private StripeClient $stripe;
+
     private const ALLOWED_CURRENCIES = ['mad', 'eur', 'usd'];
 
     public function __construct()
@@ -30,33 +31,33 @@ class StripeService implements PaymentGatewayInterface
         }
 
         if (! in_array(strtolower($transaction->currency), self::ALLOWED_CURRENCIES, true)) {
-            throw new \InvalidArgumentException('Devise non supportée : ' . $transaction->currency);
+            throw new \InvalidArgumentException('Devise non supportée : '.$transaction->currency);
         }
 
         try {
             $session = $this->stripe->checkout->sessions->create([
                 'payment_method_types' => ['card'],
-                'line_items'           => [[
+                'line_items' => [[
                     'price_data' => [
-                        'currency'     => strtolower($transaction->currency),
+                        'currency' => strtolower($transaction->currency),
                         'product_data' => [
-                            'name'        => $transaction->title,
+                            'name' => $transaction->title,
                             'description' => $transaction->description ?? 'Transaction SafeDeal',
                         ],
-                        'unit_amount'  => (int) ($transaction->amount * 100),
+                        'unit_amount' => (int) ($transaction->amount * 100),
                     ],
-                    'quantity'   => 1,
+                    'quantity' => 1,
                 ]],
-                'mode'        => 'payment',
+                'mode' => 'payment',
                 'success_url' => $successUrl,
-                'cancel_url'  => $cancelUrl,
-                'metadata'    => [
+                'cancel_url' => $cancelUrl,
+                'metadata' => [
                     'transaction_id' => $transaction->id,
-                    'vendor_id'      => $transaction->vendor_id,
-                    'buyer_id'       => $transaction->buyer_id,
+                    'vendor_id' => $transaction->vendor_id,
+                    'buyer_id' => $transaction->buyer_id,
                 ],
             ], [
-                'idempotency_key' => 'transaction_' . $transaction->id,
+                'idempotency_key' => 'transaction_'.$transaction->id,
             ]);
 
             $transaction->update([
@@ -64,13 +65,13 @@ class StripeService implements PaymentGatewayInterface
             ]);
 
             return [
-                'id'  => $session->id,
+                'id' => $session->id,
                 'url' => $session->url,
             ];
 
         } catch (ApiErrorException $e) {
             report($e);
-            throw new \RuntimeException('Impossible de créer la session Stripe : ' . $e->getMessage());
+            throw new \RuntimeException('Impossible de créer la session Stripe : '.$e->getMessage());
         }
     }
 }

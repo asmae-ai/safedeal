@@ -3,11 +3,14 @@
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
 use App\Models\User;
-use function Pest\Laravel\{actingAs, assertDatabaseHas, getJson, postJson};
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+use function Pest\Laravel\actingAs;
+use function Pest\Laravel\assertDatabaseHas;
 
-    test('vendor can create transaction', function () {
+uses(RefreshDatabase::class);
+
+test('vendor can create transaction', function () {
     $vendor = User::factory()->create([
         'role' => 'vendor',
         'identity_status' => 'approved',
@@ -45,7 +48,6 @@ test('authorized user can view transaction by secure token', function () {
         ->assertStatus(200)
         ->assertJsonPath('data.id', $transaction->id);
 });
-
 
 test('user can list their transactions', function () {
     $vendor = User::factory()->create();

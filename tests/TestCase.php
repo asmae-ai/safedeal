@@ -17,13 +17,13 @@ abstract class TestCase extends BaseTestCase
         $this->artisan('passport:keys', ['--force' => true]);
 
         Client::forceCreate([
-            'id'            => '9f853b00-0001-0000-0000-000000000001',
-            'name'          => 'Test Personal Access Client',
-            'secret'        => null,
-            'provider'      => 'users',
+            'id' => '9f853b00-0001-0000-0000-000000000001',
+            'name' => 'Test Personal Access Client',
+            'secret' => null,
+            'provider' => 'users',
             'redirect_uris' => [],
-            'grant_types'   => ['personal_access'],
-            'revoked'       => false,
+            'grant_types' => ['personal_access'],
+            'revoked' => false,
         ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\PaymentGatewayInterface;
 use App\Domain\Auth\Contracts\EmailVerificationStore;
 use App\Domain\Auth\Contracts\OtpGenerator;
 use App\Domain\Auth\Contracts\OtpNotifier;
@@ -19,10 +20,9 @@ use App\Models\IdentityVerification;
 use App\Models\Transaction;
 use App\Policies\IdentityVerificationPolicy;
 use App\Policies\TransactionPolicy;
+use App\Services\StripeService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
-use App\Contracts\PaymentGatewayInterface;
-use App\Services\StripeService;
 
 class AppServiceProvider extends ServiceProvider
 {
