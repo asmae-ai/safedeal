@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Http\Controllers\Api;
+
+use App\Contracts\PaymentGatewayInterface;
 use App\Enums\TransactionStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateTransactionRequest;
@@ -12,7 +14,10 @@ use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-    public function __construct(private readonly TransactionService $service) {}
+    public function __construct(
+        private readonly TransactionService $service,
+        private readonly PaymentGatewayInterface $paymentGateway,
+    ) {}
 
     public function store(CreateTransactionRequest $request): JsonResponse
     {
@@ -29,6 +34,27 @@ class TransactionController extends Controller
         ], 201);
     }
 
+    public function checkout(Request $request, Transaction $transaction): JsonResponse
+    {
+        $this->authorize('checkout', $transaction);
+
+        $frontendUrl = config('app.frontend_url');
+
+        $successUrl = $frontendUrl . '/transactions/' . $transaction->secure_token . '?payment=success';
+        $cancelUrl  = $frontendUrl . '/transactions/' . $transaction->secure_token . '?payment=cancelled';
+
+        $session = $this->paymentGateway->createCheckoutSession(
+            $transaction,
+            $successUrl,
+            $cancelUrl,
+        );
+
+        return response()->json([
+            'checkout_url' => $session['url'],
+            'session_id'   => $session['id'],
+        ]);
+    }
+
     public function show(string $token): JsonResponse
     {
         $transaction = Transaction::where('secure_token', $token)
@@ -39,28 +65,53 @@ class TransactionController extends Controller
             'data' => new TransactionResource($transaction),
         ]);
     }
-        public function pay(Request $request, Transaction $transaction): JsonResponse
+
+    public function pay(Request $request, Transaction $transaction): JsonResponse
     {
-        $transaction = $this->service->transitionTo($transaction, TransactionStatus::PaymentReceived);
-        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
+        $transaction = $this->service->transitionTo(
+            $transaction,
+            TransactionStatus::PaymentReceived
+        );
+
+        return response()->json([
+            'data' => new TransactionResource($transaction->load('vendor', 'buyer')),
+        ]);
     }
 
     public function ship(Request $request, Transaction $transaction): JsonResponse
     {
-        $transaction = $this->service->transitionTo($transaction, TransactionStatus::InShipping);
-        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
+        $transaction = $this->service->transitionTo(
+            $transaction,
+            TransactionStatus::InShipping
+        );
+
+        return response()->json([
+            'data' => new TransactionResource($transaction->load('vendor', 'buyer')),
+        ]);
     }
 
     public function deliver(Request $request, Transaction $transaction): JsonResponse
     {
-        $transaction = $this->service->transitionTo($transaction, TransactionStatus::Delivered);
-        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
+        $transaction = $this->service->transitionTo(
+            $transaction,
+            TransactionStatus::Delivered
+        );
+
+        return response()->json([
+            'data' => new TransactionResource($transaction->load('vendor', 'buyer')),
+        ]);
     }
 
     public function close(Request $request, Transaction $transaction): JsonResponse
     {
-        $transaction = $this->service->transitionTo($transaction, TransactionStatus::Closed);
-        return response()->json(['data' => new TransactionResource($transaction->load('vendor', 'buyer'))]);
+        $transaction = $this->service->transitionTo(
+            $transaction,
+            TransactionStatus::Closed
+        );
+
+        return response()->json([
+            'data' => new TransactionResource($transaction->load('vendor', 'buyer')),
+        ]);
     }
 
     public function index(Request $request): JsonResponse

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Enums\TransactionStatus;
@@ -8,26 +10,29 @@ use App\Models\User;
 use DomainException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class TransactionService
 {
+    public function __construct(
+        private readonly StripeService $stripeService,
+    ) {}
+
     public function create(User $vendor, array $data): Transaction
     {
+        // Validation métier
+        if (($data['amount'] ?? 0) <= 0) {
+            throw new DomainException('Le montant doit être supérieur à zéro.');
+        }
+
         return DB::transaction(function () use ($vendor, $data) {
-            $transaction = Transaction::create([
-                'vendor_id' => $vendor->id,
-                'title' => $data['title'],
+            return Transaction::create([
+                'vendor_id'   => $vendor->id,
+                'title'       => $data['title'],
                 'description' => $data['description'] ?? null,
-                'amount' => $data['amount'],
-                'currency' => $data['currency'] ?? 'MAD',
-                'secure_token' => Str::random(64),
-                'status' => TransactionStatus::PendingPayment,
+                'amount'      => $data['amount'],
+                'currency'    => $data['currency'] ?? 'MAD',
+                'status'      => TransactionStatus::PendingPayment,
             ]);
-
-            // TODO: Enregistrer le log d'audit pour la création
-
-            return $transaction;
         });
     }
 
@@ -49,6 +54,11 @@ class TransactionService
             ->paginate($perPage);
     }
 
+    public function createCheckoutSession(Transaction $transaction, string $successUrl, string $cancelUrl): array
+    {
+        return $this->stripeService->createCheckoutSession($transaction, $successUrl, $cancelUrl);
+    }
+
     public function transitionTo(Transaction $transaction, TransactionStatus $newStatus): Transaction
     {
         if (! $transaction->canTransitionTo($newStatus)) {
@@ -59,19 +69,17 @@ class TransactionService
 
         return DB::transaction(function () use ($transaction, $newStatus) {
             $timestamps = match ($newStatus) {
-                TransactionStatus::PaymentReceived => ['paid_at' => now()],
-                TransactionStatus::InShipping => ['shipped_at' => now()],
-                TransactionStatus::Delivered => ['delivered_at' => now()],
-                TransactionStatus::Closed => ['closed_at' => now()],
-                default => [],
+                TransactionStatus::PaymentReceived => ['paid_at'      => now()],
+                TransactionStatus::InShipping      => ['shipped_at'   => now()],
+                TransactionStatus::Delivered       => ['delivered_at' => now()],
+                TransactionStatus::Closed          => ['closed_at'    => now()],
+                default                            => [],
             };
 
-            $transaction->update(array_merge(
+            $transaction->forceFill(array_merge(
                 ['status' => $newStatus],
                 $timestamps
-            ));
-
-            // TODO: Enregistrer le log d'audit pour le changement de statut
+            ))->save();
 
             return $transaction->fresh(['vendor', 'buyer']);
         });
@@ -79,10 +87,35 @@ class TransactionService
 
     public function cancel(Transaction $transaction): Transaction
     {
-        $updated = $this->transitionTo($transaction, TransactionStatus::Cancelled);
+        return $this->transitionTo($transaction, TransactionStatus::Cancelled);
+    }
+    public function handleStripeWebhook(\Stripe\Event $event): void
+    {
+        if ($event->type !== 'checkout.session.completed') {
+            return;
+        }
 
-        // TODO: Enregistrer le log d'audit pour l'annulation
+        $session       = $event->data->object;
+        $transactionId = $session->metadata->transaction_id ?? null;
 
-        return $updated;
+        if (! $transactionId) {
+            return;
+        }
+
+        $transaction = Transaction::query()->find($transactionId);
+
+        if (! $transaction) {
+            return;
+        }
+
+        // Empêche un double traitement du webhook
+        if ($transaction->status !== TransactionStatus::PendingPayment) {
+            return;
+        }
+
+        $this->transitionTo(
+            $transaction,
+            TransactionStatus::PaymentReceived
+        );
     }
 }

@@ -21,6 +21,8 @@ use App\Policies\IdentityVerificationPolicy;
 use App\Policies\TransactionPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use App\Contracts\PaymentGatewayInterface;
+use App\Services\StripeService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TwoFactorService::class);
         $this->app->singleton(DatabasePasswordResetTokenRepository::class);
         $this->app->bind(EmailVerificationStore::class, RedisEmailVerificationStore::class);
+
+        $this->app->singleton(
+            PaymentGatewayInterface::class,
+            StripeService::class
+        );
     }
 
     public function boot(): void

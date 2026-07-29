@@ -4,7 +4,7 @@ namespace App\Policies;
 
 use App\Models\Transaction;
 use App\Models\User;
-
+use App\Enums\TransactionStatus;
 class TransactionPolicy
 {
     public function create(User $user): bool
@@ -29,5 +29,10 @@ class TransactionPolicy
     public function listOwn(User $user): bool
     {
         return true;
+    }
+        public function checkout(User $user, Transaction $transaction): bool
+    {
+        return $user->id === $transaction->buyer_id
+            && $transaction->status === TransactionStatus::PendingPayment;
     }
 }
