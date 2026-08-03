@@ -164,3 +164,29 @@ test('transaction can be cancelled', function () {
         'status' => TransactionStatus::Cancelled->value,
     ]);
 });
+
+test('buyer can claim transaction', function () {
+    $vendor = User::factory()->create([
+        'role' => 'vendor',
+    ]);
+
+    $buyer = User::factory()->create([
+        'role' => 'buyer',
+    ]);
+
+    $transaction = Transaction::factory()->create([
+        'vendor_id' => $vendor->id,
+        'buyer_id' => null,
+        'status' => TransactionStatus::PendingPayment,
+    ]);
+
+    actingAs($buyer, 'api')
+        ->postJson("/api/v1/transactions/{$transaction->secure_token}/claim")
+        ->assertStatus(200)
+        ->assertJsonPath('data.buyer.id', $buyer->id);
+
+    assertDatabaseHas('transactions', [
+        'id' => $transaction->id,
+        'buyer_id' => $buyer->id,
+    ]);
+});

@@ -50,7 +50,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/transactions/{transaction}/deliver', [TransactionController::class, 'deliver']);
         Route::post('/transactions/{transaction}/close', [TransactionController::class, 'close']);
         Route::post('/transactions/{transaction}/checkout', [TransactionController::class, 'checkout']);
-
+        Route::post('/transactions/{token}/claim', [TransactionController::class, 'claim']);
         // 2FA
         Route::prefix('auth/2fa')->group(function (): void {
             Route::post('/send', [TwoFactorController::class, 'send']);

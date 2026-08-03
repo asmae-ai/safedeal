@@ -20,7 +20,6 @@ class TransactionService
 
     public function create(User $vendor, array $data): Transaction
     {
-        // Validation métier
         if (($data['amount'] ?? 0) <= 0) {
             throw new DomainException('Le montant doit être supérieur à zéro.');
         }
@@ -35,6 +34,27 @@ class TransactionService
                 'status' => TransactionStatus::PendingPayment,
             ]);
         });
+    }
+
+    public function claim(Transaction $transaction, User $buyer): Transaction
+    {
+        if ($transaction->buyer_id !== null) {
+            throw new DomainException('Cette transaction possède déjà un acheteur.');
+        }
+
+        if ($transaction->vendor_id === $buyer->id) {
+            throw new DomainException('Le vendeur ne peut pas être l\'acheteur.');
+        }
+
+        if ($transaction->status !== TransactionStatus::PendingPayment) {
+            throw new DomainException('Cette transaction ne peut plus être réclamée.');
+        }
+
+        $transaction->forceFill([
+            'buyer_id' => $buyer->id,
+        ])->save();
+
+        return $transaction->fresh(['vendor', 'buyer']);
     }
 
     public function findByToken(string $token): Transaction
@@ -110,7 +130,6 @@ class TransactionService
             return;
         }
 
-        // Empêche un double traitement du webhook
         if ($transaction->status !== TransactionStatus::PendingPayment) {
             return;
         }

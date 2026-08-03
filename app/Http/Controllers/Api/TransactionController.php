@@ -66,6 +66,28 @@ class TransactionController extends Controller
         ]);
     }
 
+    /**
+     * Permet à un acheteur de réclamer une transaction
+     * via son secure_token.
+     */
+    public function claim(Request $request, string $token): JsonResponse
+    {
+        $transaction = Transaction::where('secure_token', $token)
+            ->firstOrFail();
+
+        $transaction = $this->service->claim(
+            $transaction,
+            $request->user()
+        );
+
+        return response()->json([
+            'message' => 'Transaction réclamée avec succès.',
+            'data' => new TransactionResource(
+                $transaction->load('vendor', 'buyer')
+            ),
+        ]);
+    }
+
     public function pay(Request $request, Transaction $transaction): JsonResponse
     {
         $transaction = $this->service->transitionTo(
